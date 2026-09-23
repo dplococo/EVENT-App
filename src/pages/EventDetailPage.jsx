@@ -6,6 +6,7 @@ import { eventService, tableService } from '../services/api'
 import SectionHeader from '../components/SectionHeader'
 import BottomNav from '../components/BottomNav'
 import { resolveAssetUrl } from '../utils/assetUrl'
+import { usePolling } from '../hooks/usePolling'
 
 export default function EventDetailPage() {
   const { id } = useParams()
@@ -27,6 +28,17 @@ export default function EventDetailPage() {
       })
       .finally(() => setLoading(false))
   }, [id])
+
+  // Refresca la disponibilidad de mesas mientras el usuario navega el mapa,
+  // para reflejar reservas hechas desde el desktop u otros dispositivos.
+  usePolling(() => {
+    Promise.all([eventService.getStats(id), tableService.getByEventId(id)])
+      .then(([statsRes, tablesRes]) => {
+        setStats(statsRes.data)
+        setTables(tablesRes.data || [])
+      })
+      .catch(() => {})
+  }, 15000, [id])
 
   const projectTablePosition = (table) => {
     if (!tables.length) {
