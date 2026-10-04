@@ -8,6 +8,7 @@ import {
 } from '@ionic/react'
 import { eyeOutline, eyeOffOutline, lockClosedOutline, mailOutline, personOutline, ticketOutline } from 'ionicons/icons'
 import { useAuth } from '../context/AuthContext'
+import { consumeIdleLogoutNotice } from '../hooks/useIdleLogout'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [idleNotice] = useState(consumeIdleLogoutNotice)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   // El correo de la empresa se pide solo si ese usuario existe en más de una cuenta.
@@ -112,6 +114,10 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
+            )}
+
+            {idleNotice && !error && (
+              <div className="notice notice--info" role="status">{idleNotice}</div>
             )}
 
             {error && (

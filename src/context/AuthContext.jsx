@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { authService, licenseService } from '../services/api'
+import useIdleLogout, { markActivity } from '../hooks/useIdleLogout'
 
 const AuthContext = createContext(null)
 
@@ -56,6 +57,7 @@ export const AuthProvider = ({ children }) => {
       err.response = { data: { error: err.message } }
       throw err
     }
+    markActivity()
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
@@ -63,12 +65,14 @@ export const AuthProvider = ({ children }) => {
     return userData
   }
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setUser(null)
     setLicense(null)
-  }
+  }, [])
+
+  useIdleLogout(Boolean(user), logout)
 
   const isAdmin = () => user?.role === 'Admin'
 
