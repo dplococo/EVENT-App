@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { IonContent, IonHeader, IonToolbar, IonIcon, IonPage, IonSpinner, IonRefresher, IonRefresherContent } from '@ionic/react'
 import { chevronForwardOutline, filterOutline, searchOutline, arrowBackOutline, closeOutline, calendarOutline } from 'ionicons/icons'
 import { eventService, categoryService } from '../services/api'
@@ -12,6 +12,9 @@ export default function EventsPage() {
   const [query, setQuery] = useState('')
   const [sortMode, setSortMode] = useState('date-asc')
   const [categoryFilter, setCategoryFilter] = useState('')
+  // Filtro rápido que llega desde las estadísticas del inicio: ?vista=activos|proximos
+  const [searchParams, setSearchParams] = useSearchParams()
+  const quickFilter = searchParams.get('vista') || ''
   const navigate = useNavigate()
 
   const loadData = useCallback(async () => {
@@ -48,8 +51,13 @@ export default function EventsPage() {
       ].some(v => v && String(v).toLowerCase().includes(normalizedQuery))
 
       const matchesCategory = !categoryFilter || String(event.categoryId) === categoryFilter
+      const matchesQuick = quickFilter === 'activos'
+        ? event.status === 'Active'
+        : quickFilter === 'proximos'
+          ? event.status === 'Active' && new Date(event.date) > new Date()
+          : true
 
-      return matchesQuery && matchesCategory
+      return matchesQuery && matchesCategory && matchesQuick
     })
 
     return [...filtered].sort((a, b) => {
@@ -57,7 +65,7 @@ export default function EventsPage() {
       const dateB = new Date(b.date).getTime()
       return sortMode === 'date-desc' ? dateB - dateA : dateA - dateB
     })
-  }, [events, query, sortMode, categoryFilter])
+  }, [events, query, sortMode, categoryFilter, quickFilter])
 
   return (
     <IonPage>
@@ -74,7 +82,7 @@ export default function EventsPage() {
           <IonRefresherContent pullingText="Deslizá para actualizar" refreshingText="Actualizando..." />
         </IonRefresher>
 
-        <div className="events-page" style={{ padding: '0 16px' }}>
+        <div className="events-page events-page--padded">
           <div className="events-page__header">
             <div className="search-bar">
               <label className="search-bar__field" aria-label="Buscar evento">
@@ -116,6 +124,16 @@ export default function EventsPage() {
               </div>
             )}
 
+            <div className="category-chips" role="tablist" aria-label="Filtro rápido">
+              {[['', 'Todos'], ['activos', 'Activos'], ['proximos', 'Próximos']].map(([value, label]) => (
+                <button key={label} type="button" role="tab" aria-selected={quickFilter === value}
+                  className={`category-chip ${quickFilter === value ? 'category-chip--active' : ''}`}
+                  onClick={() => setSearchParams(value ? { vista: value } : {}, { replace: true })}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
             <div className="search-meta">
               <span className="search-meta__sort">
                 <IonIcon icon={calendarOutline} />
@@ -125,7 +143,11 @@ export default function EventsPage() {
             </div>
           </div>
 
-          {loading ? <div className="events-loading"><IonSpinner /></div> : (
+          {loading ? (
+            <div className="events-grid" aria-busy="true">
+              {[0, 1, 2].map((i) => <div key={i} className="skeleton skeleton--card" />)}
+            </div>
+          ) : (
             <div className="events-grid">
               {visibleEvents.map((event) => {
                 const cat = getCategoryById(event.categoryId)
@@ -147,7 +169,8 @@ export default function EventsPage() {
                         </span>
                       </div>
                       {cat && (
-                        <span className="event-card__category" style={{ background: cat.color + '18', color: cat.color }}>
+                        <span className="event-card__category">
+                          <span className="event-card__category-dot" style={{ background: cat.color }} />
                           {cat.name}
                         </span>
                       )}

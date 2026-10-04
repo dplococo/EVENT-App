@@ -8,21 +8,25 @@ import EventsPage from './pages/EventsPage'
 import EventDetailPage from './pages/EventDetailPage'
 import ReservationPage from './pages/ReservationPage'
 import ProfilePage from './pages/ProfilePage'
+import BlockedPage from './pages/BlockedPage'
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth()
+  const { user, license, loading } = useAuth()
   if (loading) {
     return (
       <IonPage>
         <IonContent className="ion-padding">
-          <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+          <div className="center-fill">
             <IonSpinner name="crescent" />
           </div>
         </IonContent>
       </IonPage>
     )
   }
-  return user ? children : <Navigate to="/login" replace />
+  if (!user) return <Navigate to="/login" replace />
+  // Licencia bloqueada: una sola pantalla, sin importar la ruta.
+  if (license?.blocked) return <BlockedPage />
+  return children
 }
 
 const AppRoutes = () => {

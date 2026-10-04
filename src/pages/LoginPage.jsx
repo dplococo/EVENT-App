@@ -6,7 +6,7 @@ import {
   IonPage,
   IonSpinner
 } from '@ionic/react'
-import { eyeOutline, eyeOffOutline, lockClosedOutline, personOutline } from 'ionicons/icons'
+import { eyeOutline, eyeOffOutline, lockClosedOutline, mailOutline, personOutline, ticketOutline } from 'ionicons/icons'
 import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
@@ -17,6 +17,9 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  // El correo de la empresa se pide solo si ese usuario existe en más de una cuenta.
+  const [tenantEmail, setTenantEmail] = useState('')
+  const [needsTenant, setNeedsTenant] = useState(false)
 
   useEffect(() => {
     if (user) navigate('/home', { replace: true })
@@ -27,9 +30,10 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      await login(username, password)
+      await login(username, password, needsTenant ? tenantEmail : undefined)
       navigate('/home', { replace: true })
     } catch (err) {
+      if (err.response?.data?.code === 'AMBIGUOUS_USER') setNeedsTenant(true)
       setError(err.response?.data?.error || 'No se pudo iniciar sesión')
     } finally {
       setLoading(false)
@@ -42,7 +46,7 @@ export default function LoginPage() {
         <div className="login-container">
           <div className="login-brand">
             <div className="login-brand__icon">
-              <IonIcon icon={personOutline} />
+              <IonIcon icon={ticketOutline} />
             </div>
             <h1 className="login-brand__name">EventManager</h1>
             <p className="login-brand__tagline">Gestioná eventos y reservas</p>
@@ -83,6 +87,7 @@ export default function LoginPage() {
                   type="button"
                   className="login-field__eye"
                   onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   tabIndex={-1}
                 >
                   <IonIcon icon={showPassword ? eyeOffOutline : eyeOutline} />
@@ -90,8 +95,27 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {needsTenant && (
+              <div className="login-field">
+                <label className="login-field__label" htmlFor="tenantEmail">Correo de tu empresa</label>
+                <div className="login-field__input-wrap">
+                  <IonIcon icon={mailOutline} className="login-field__icon" />
+                  <input
+                    id="tenantEmail"
+                    type="email"
+                    value={tenantEmail}
+                    onChange={(e) => setTenantEmail(e.target.value)}
+                    placeholder="empresa@correo.com"
+                    className="login-field__input"
+                    autoFocus
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
             {error && (
-              <div className="login-error">{error}</div>
+              <div className={needsTenant ? 'notice notice--info' : 'login-error'} role="alert">{error}</div>
             )}
 
             <button type="submit" className="login-btn" disabled={loading}>

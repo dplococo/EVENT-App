@@ -1,173 +1,132 @@
 import { useEffect, useState } from 'react'
-import { IonCard, IonCardContent, IonContent, IonIcon, IonPage, IonSpinner, IonBadge } from '@ionic/react'
-import {
-  calendarOutline,
-  chevronForwardOutline,
-  personOutline,
-  logOutOutline,
-  locationOutline,
-} from 'ionicons/icons'
+import { IonContent, IonIcon, IonPage } from '@ionic/react'
+import { chevronForwardOutline, locationOutline, timeOutline } from 'ionicons/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { eventService } from '../services/api'
 import BottomNav from '../components/BottomNav'
+import LicenseNotice from '../components/LicenseNotice'
+
+const greeting = () => {
+  const h = new Date().getHours()
+  if (h < 12) return 'Buenos días'
+  if (h < 19) return 'Buenas tardes'
+  return 'Buenas noches'
+}
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
+
+const EventRow = ({ event, muted, onOpen }) => {
+  const date = new Date(event.date)
+  return (
+    <button type="button" className={`event-row ${muted ? 'event-row--muted' : ''}`} onClick={onOpen}>
+      <span className="date-tile" aria-hidden="true">
+        <span className="date-tile__month">{date.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '')}</span>
+        <span className="date-tile__day">{date.getDate()}</span>
+      </span>
+      <span className="event-row__body">
+        <span className="event-row__title">{event.name}</span>
+        <span className="event-row__meta">
+          <IonIcon icon={timeOutline} />
+          {date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+          {event.location && <><span aria-hidden="true">·</span><IonIcon icon={locationOutline} />{event.location}</>}
+        </span>
+      </span>
+      <IonIcon icon={chevronForwardOutline} />
+    </button>
+  )
+}
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     eventService.getAll()
       .then((res) => setEvents(res.data || []))
+      // Un 402 (licencia bloqueada) ya lo resuelve la pantalla de bloqueo.
+      .catch(() => setEvents([]))
       .finally(() => setLoading(false))
   }, [])
 
   const now = new Date()
-  const activeEvents = events.filter(e => e.status === 'Active')
-  const upcomingEvents = events.filter(e => new Date(e.date) > now && e.status === 'Active')
-  const pastEvents = events.filter(e => e.status === 'Completed')
+  const activeEvents = events.filter((e) => e.status === 'Active')
+  const upcomingEvents = activeEvents
+    .filter((e) => new Date(e.date) > now)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+  const pastEvents = events.filter((e) => e.status === 'Completed')
 
-  const greeting = () => {
-    const h = new Date().getHours()
-    if (h < 12) return 'Buenos días'
-    if (h < 19) return 'Buenas tardes'
-    return 'Buenas noches'
-  }
+  const firstName = (user?.fullName || user?.username || 'Usuario').split(' ')[0]
 
   return (
     <IonPage>
       <IonContent className="ion-padding app-shell">
-        <header className="home-greeting home-greeting--compact">
-          <p className="eyebrow eyebrow--dark">{greeting()}</p>
-          <h1>Hola, {user?.fullName || user?.username || 'Usuario'}</h1>
+        <header className="home-greeting">
+          <p className="eyebrow">{greeting()}</p>
+          <h1>Hola, {firstName}</h1>
         </header>
 
-        {/* Stats */}
-        <section className="quick-panel quick-panel--compact">
-          <p className="quick-panel__title">Resumen</p>
-          <p className="quick-panel__subtitle">Vista general del sistema</p>
+        <LicenseNotice />
+
+        {loading ? (
+          <div className="stat-row" aria-busy="true">
+            {[0, 1, 2].map((i) => <div key={i} className="skeleton skeleton--stat" />)}
+          </div>
+        ) : (
+          <div className="stat-row">
+            <button type="button" className="stat-chip" onClick={() => navigate('/events')}>
+              <span className="stat-chip__value">{events.length}</span>
+              <span className="stat-chip__label"><span className="stat-chip__dot" />Total</span>
+            </button>
+            <button type="button" className="stat-chip stat-chip--success" onClick={() => navigate('/events?vista=activos')}>
+              <span className="stat-chip__value">{activeEvents.length}</span>
+              <span className="stat-chip__label"><span className="stat-chip__dot" />Activos</span>
+            </button>
+            <button type="button" className="stat-chip stat-chip--primary" onClick={() => navigate('/events?vista=proximos')}>
+              <span className="stat-chip__value">{upcomingEvents.length}</span>
+              <span className="stat-chip__label"><span className="stat-chip__dot" />Próximos</span>
+            </button>
+          </div>
+        )}
+
+        <section className="home-section">
+          <div className="section-header section-header--compact">
+            <div>
+              <h2>Próximos eventos</h2>
+              <p>{loading ? 'Cargando…' : upcomingEvents.length ? plural(upcomingEvents.length, 'evento') + ' por delante' : 'No hay eventos próximos'}</p>
+            </div>
+            {upcomingEvents.length > 3 && (
+              <button type="button" className="link-button" onClick={() => navigate('/events?vista=proximos')}>Ver todos</button>
+            )}
+          </div>
 
           {loading ? (
-            <div style={{ display: 'grid', placeItems: 'center', minHeight: 80 }}><IonSpinner name="crescent" /></div>
+            [0, 1].map((i) => <div key={i} className="skeleton skeleton--card" />)
+          ) : upcomingEvents.length > 0 ? (
+            upcomingEvents.slice(0, 3).map((event) => (
+              <EventRow key={event.id} event={event} onOpen={() => navigate(`/events/${event.id}`)} />
+            ))
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 14 }}>
-              <button
-                type="button"
-                onClick={() => navigate('/events')}
-                style={{ textAlign: 'center', padding: '12px 8px', borderRadius: 12, background: 'var(--app-bg-soft)', border: '1px solid var(--app-border-solid)', cursor: 'pointer' }}
-              >
-                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--app-text-main)' }}>{events.length}</div>
-                <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 2 }}>Total</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/events')}
-                style={{ textAlign: 'center', padding: '12px 8px', borderRadius: 12, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.16)', cursor: 'pointer' }}
-              >
-                <div style={{ fontSize: 24, fontWeight: 800, color: '#16a34a' }}>{activeEvents.length}</div>
-                <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 2 }}>Activos</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/events')}
-                style={{ textAlign: 'center', padding: '12px 8px', borderRadius: 12, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.16)', cursor: 'pointer' }}
-              >
-                <div style={{ fontSize: 24, fontWeight: 800, color: '#3b82f6' }}>{upcomingEvents.length}</div>
-                <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 2 }}>Próximos</div>
-              </button>
+            <div className="empty-state">
+              <strong>Sin eventos por delante</strong>
+              <p>Cuando se cree un evento con fecha futura aparece acá.</p>
             </div>
           )}
         </section>
 
-        {/* Accesos rápidos */}
-        <section className="quick-panel quick-panel--compact" style={{ marginTop: 12 }}>
-          <p className="quick-panel__title">Accesos rápidos</p>
-          <div className="quick-panel__grid">
-            <button className="quick-action" type="button" onClick={() => navigate('/events')}>
-              <IonIcon icon={calendarOutline} />
-              <span>Eventos</span>
-            </button>
-            <button className="quick-action" type="button" onClick={() => navigate('/profile')}>
-              <IonIcon icon={personOutline} />
-              <span>Mi perfil</span>
-            </button>
-            <button className="quick-action" type="button" onClick={() => { logout(); navigate('/login', { replace: true }) }}>
-              <IonIcon icon={logOutOutline} />
-              <span>Salir</span>
-            </button>
-          </div>
-        </section>
-
-        {/* Próximos eventos */}
-        {upcomingEvents.length > 0 && (
-          <section style={{ marginTop: 16 }}>
-            <div className="section-header section-header--compact">
-              <div>
-                <h2>Próximos eventos</h2>
-                <p>{upcomingEvents.length} evento{upcomingEvents.length !== 1 ? 's' : ''} activo{upcomingEvents.length !== 1 ? 's' : ''}</p>
-              </div>
-              <button type="button" onClick={() => navigate('/events')} style={{ background: 'none', border: 'none', color: 'var(--app-text-muted)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-                Ver todos
-              </button>
-            </div>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {upcomingEvents.slice(0, 3).map((event) => (
-                <IonCard key={event.id} className="shortcut-card shortcut-card--compact" button onClick={() => navigate(`/events/${event.id}`)}>
-                  <IonCardContent>
-                    <div className="shortcut-card__row">
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <strong style={{ fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.name}</strong>
-                          <IonBadge color="success" style={{ flexShrink: 0, fontSize: 10 }}>Activo</IonBadge>
-                        </div>
-                        <div style={{ display: 'flex', gap: 12, color: 'var(--app-text-muted)', fontSize: 12 }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <IonIcon icon={calendarOutline} style={{ fontSize: 13 }} />
-                            {new Date(event.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                          </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <IonIcon icon={locationOutline} style={{ fontSize: 13 }} />
-                            {event.location?.length > 20 ? event.location.slice(0, 20) + '…' : event.location}
-                          </span>
-                        </div>
-                      </div>
-                      <IonIcon icon={chevronForwardOutline} style={{ flexShrink: 0, color: 'var(--app-text-muted)' }} />
-                    </div>
-                  </IonCardContent>
-                </IonCard>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Últimos eventos completados */}
         {pastEvents.length > 0 && (
-          <section style={{ marginTop: 16, marginBottom: 80 }}>
+          <section className="home-section">
             <div className="section-header section-header--compact">
               <div>
                 <h2>Eventos pasados</h2>
-                <p>{pastEvents.length} evento{pastEvents.length !== 1 ? 's' : ''} completado{pastEvents.length !== 1 ? 's' : ''}</p>
+                <p>{plural(pastEvents.length, 'evento')} completado{pastEvents.length === 1 ? '' : 's'}</p>
               </div>
             </div>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {pastEvents.slice(0, 2).map((event) => (
-                <IonCard key={event.id} className="shortcut-card shortcut-card--compact shortcut-card--muted" button onClick={() => navigate(`/events/${event.id}`)}>
-                  <IonCardContent>
-                    <div className="shortcut-card__row">
-                      <div>
-                        <strong style={{ fontSize: 14 }}>{event.name}</strong>
-                        <p style={{ margin: '2px 0 0', color: 'var(--app-text-muted)', fontSize: 12 }}>
-                          {new Date(event.date).toLocaleDateString('es-ES')} · {event.location}
-                        </p>
-                      </div>
-                      <IonBadge color="medium" style={{ fontSize: 10 }}>Completado</IonBadge>
-                    </div>
-                  </IonCardContent>
-                </IonCard>
-              ))}
-            </div>
+            {pastEvents.slice(0, 2).map((event) => (
+              <EventRow key={event.id} event={event} muted onOpen={() => navigate(`/events/${event.id}`)} />
+            ))}
           </section>
         )}
 

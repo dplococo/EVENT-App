@@ -1,16 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import {
-  IonButton,
-  IonContent,
-  IonIcon,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonPage,
-  IonText
-} from '@ionic/react'
-import { calendarOutline, keyOutline, lockClosedOutline, mailOutline, personOutline } from 'ionicons/icons'
+import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react'
+import { keyOutline, lockClosedOutline, mailOutline, personOutline } from 'ionicons/icons'
 import { authService } from '../services/api'
 
 export default function ForgotPasswordPage() {
@@ -45,8 +36,8 @@ export default function ForgotPasswordPage() {
     setError('')
     setMessage('')
 
-    if (newPassword.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
+    if (newPassword.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres')
       return
     }
 
@@ -67,89 +58,52 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  const Field = ({ id, label, icon, ...input }) => (
+    <div className="login-field">
+      <label className="login-field__label" htmlFor={id}>{label}</label>
+      <div className="login-field__input-wrap">
+        <IonIcon icon={icon} className="login-field__icon" />
+        <input id={id} className="login-field__input" required {...input} />
+      </div>
+    </div>
+  )
+
   return (
     <IonPage>
-      <IonContent fullscreen className="app-shell login-wrapper">
-        <div className="login-screen" style={{ justifyItems: 'center' }}>
-          <div className="login-hero">
-            <div className="login-mark">
+      <IonContent fullscreen className="login-wrapper">
+        <div className="login-container">
+          <div className="login-brand">
+            <div className="login-brand__icon">
               <IonIcon icon={keyOutline} />
             </div>
-            <h1>EventManager</h1>
-            <p className="hero-copy hero-copy--dark">
-              {step === 1
-                ? 'Verificá tu identidad para recuperar tu contraseña.'
-                : 'Credenciales verificadas. Definí tu nueva contraseña.'}
+            <h1 className="login-brand__name">{step === 1 ? 'Recuperá tu acceso' : 'Nueva contraseña'}</h1>
+            <p className="login-brand__tagline">
+              {step === 1 ? 'Verificá tu identidad con tu usuario y email.' : 'Elegí una contraseña de al menos 8 caracteres.'}
             </p>
           </div>
 
-          {error && (
-            <IonText color="danger" className="ion-padding-horizontal">
-              <p>{error}</p>
-            </IonText>
-          )}
-          {message && (
-            <IonText color="success" className="ion-padding-horizontal">
-              <p>{message}</p>
-            </IonText>
-          )}
-
-          {step === 1 && (
-            <form onSubmit={handleVerify} className="soft-card login-form">
-              <IonItem className="field-card">
-                <IonLabel position="stacked">Usuario</IonLabel>
-                <IonIcon icon={personOutline} slot="start" />
-                <IonInput value={username} onIonInput={(e) => setUsername(e.detail.value || '')} placeholder="Tu usuario" />
-              </IonItem>
-              <IonItem className="field-card">
-                <IonLabel position="stacked">Email registrado</IonLabel>
-                <IonIcon icon={mailOutline} slot="start" />
-                <IonInput
-                  type="email"
-                  value={email}
-                  onIonInput={(e) => setEmail(e.detail.value || '')}
-                  placeholder="tu@correo.com"
-                />
-              </IonItem>
-              <IonButton expand="block" type="submit" disabled={loading} className="hero-cta">
-                {loading ? 'Verificando...' : 'Verificar'}
-              </IonButton>
+          {step === 1 ? (
+            <form onSubmit={handleVerify} className="login-card">
+              {Field({ id: 'username', label: 'Usuario', icon: personOutline, value: username, onChange: (e) => setUsername(e.target.value), placeholder: 'Tu usuario', autoComplete: 'username' })}
+              {Field({ id: 'email', label: 'Email registrado', icon: mailOutline, type: 'email', value: email, onChange: (e) => setEmail(e.target.value), placeholder: 'tu@correo.com' })}
+              {error && <div className="login-error" role="alert">{error}</div>}
+              <button type="submit" className="login-btn" disabled={loading}>
+                {loading ? <IonSpinner name="crescent" /> : 'Verificar'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleReset} className="login-card">
+              {Field({ id: 'newPassword', label: 'Nueva contraseña', icon: lockClosedOutline, type: 'password', value: newPassword, onChange: (e) => setNewPassword(e.target.value), autoComplete: 'new-password' })}
+              {Field({ id: 'confirmPassword', label: 'Confirmar contraseña', icon: lockClosedOutline, type: 'password', value: confirmPassword, onChange: (e) => setConfirmPassword(e.target.value), autoComplete: 'new-password' })}
+              {error && <div className="login-error" role="alert">{error}</div>}
+              {message && <div className="success-banner" role="status">{message}</div>}
+              <button type="submit" className="login-btn" disabled={loading}>
+                {loading ? <IonSpinner name="crescent" /> : 'Guardar contraseña'}
+              </button>
             </form>
           )}
 
-          {step === 2 && (
-            <form onSubmit={handleReset} className="soft-card login-form">
-              <IonItem className="field-card">
-                <IonLabel position="stacked">Nueva contraseña</IonLabel>
-                <IonIcon icon={lockClosedOutline} slot="start" />
-                <IonInput
-                  type="password"
-                  value={newPassword}
-                  onIonInput={(e) => setNewPassword(e.detail.value || '')}
-                  placeholder="Mínimo 6 caracteres"
-                />
-              </IonItem>
-              <IonItem className="field-card">
-                <IonLabel position="stacked">Confirmar contraseña</IonLabel>
-                <IonIcon icon={lockClosedOutline} slot="start" />
-                <IonInput
-                  type="password"
-                  value={confirmPassword}
-                  onIonInput={(e) => setConfirmPassword(e.detail.value || '')}
-                  placeholder="Repetí la nueva contraseña"
-                />
-              </IonItem>
-              <IonButton expand="block" type="submit" disabled={loading} className="hero-cta">
-                {loading ? 'Guardando...' : 'Guardar contraseña'}
-              </IonButton>
-            </form>
-          )}
-
-          <div className="ion-text-center ion-padding">
-            <Link to="/login" className="hero-copy" style={{ fontSize: '14px', textDecoration: 'none' }}>
-              Volver al inicio de sesión
-            </Link>
-          </div>
+          <Link to="/login" className="login-forgot">Volver al inicio de sesión</Link>
         </div>
       </IonContent>
     </IonPage>

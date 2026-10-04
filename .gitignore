@@ -7,3 +7,4 @@ android/app/build/
 android/build/
 ios/App/build/
 ios/App/Pods/
+*.local

@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IonButton, IonContent, IonIcon, IonInput, IonItem, IonLabel, IonPage, IonText, IonCard, IonCardContent, IonSpinner } from '@ionic/react'
-import { arrowBackOutline, mailOutline, lockClosedOutline, personCircleOutline, shieldCheckmarkOutline } from 'ionicons/icons'
+import { IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react'
+import { arrowBackOutline, businessOutline, logOutOutline, mailOutline, lockClosedOutline, personCircleOutline, shieldCheckmarkOutline } from 'ionicons/icons'
 import { authService } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import BottomNav from '../components/BottomNav'
 
+const ROLE_LABELS = { Admin: 'Administrador', Operator: 'Operador', EventStaff: 'Staff de evento' }
+
 export default function ProfilePage() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, license, logout } = useAuth()
   const [profile, setProfile] = useState(user)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -46,8 +48,8 @@ export default function ProfilePage() {
       return
     }
 
-    if (newPassword.length < 6) {
-      setError('La nueva contraseña debe tener al menos 6 caracteres.')
+    if (newPassword.length < 8) {
+      setError('La nueva contraseña debe tener al menos 8 caracteres.')
       return
     }
 
@@ -80,113 +82,95 @@ export default function ProfilePage() {
         </div>
 
         {loading ? (
-          <div style={{ display: 'grid', placeItems: 'center', minHeight: 240 }}>
-            <IonSpinner />
+          <div className="center-fill">
+            <IonSpinner name="crescent" />
           </div>
         ) : (
           <>
             <div className="event-hero event-hero--compact">
               <div className="event-hero__content">
-                <p className="eyebrow eyebrow--dark">Perfil</p>
+                <p className="eyebrow">Perfil</p>
                 <h1>{profile?.fullName || profile?.username || 'Usuario'}</h1>
-                <div className="event-meta event-meta--dark">
-                  <span><IonIcon icon={personCircleOutline} /> {profile?.role || 'Sin rol'}</span>
+                <div className="event-meta">
+                  <span><IonIcon icon={personCircleOutline} /> {ROLE_LABELS[profile?.role] || profile?.role || 'Sin rol'}</span>
                   {profile?.email ? <span><IonIcon icon={mailOutline} /> {profile.email}</span> : null}
+                  {(license?.tenantName || user?.tenantName) ? <span><IonIcon icon={businessOutline} /> {license?.tenantName || user?.tenantName}</span> : null}
                 </div>
               </div>
             </div>
 
             <div className="profile-grid">
-              <IonCard className="soft-card form-card profile-card">
-                <IonCardContent>
-                  <div className="profile-card__header">
-                    <IonIcon icon={shieldCheckmarkOutline} />
-                    <div>
-                      <strong>Datos de cuenta</strong>
-                      <p>Información básica del usuario autenticado.</p>
-                    </div>
+              <section className="soft-card form-card profile-card">
+                <div className="profile-card__header">
+                  <IonIcon icon={shieldCheckmarkOutline} />
+                  <div>
+                    <strong>Datos de cuenta</strong>
+                    <p>Para cambiarlos, pedíselo a un administrador.</p>
                   </div>
+                </div>
 
-                  <div className="profile-details">
-                    <div>
-                      <span>Usuario</span>
-                      <strong>{profile?.username || '-'}</strong>
-                    </div>
-                    <div>
-                      <span>Nombre completo</span>
-                      <strong>{profile?.fullName || '-'}</strong>
-                    </div>
-                    <div>
-                      <span>Email</span>
-                      <strong>{profile?.email || '-'}</strong>
-                    </div>
-                    <div>
-                      <span>Rol</span>
-                      <strong>{profile?.role || '-'}</strong>
-                    </div>
+                <div className="profile-details">
+                  <div>
+                    <span>Usuario</span>
+                    <strong>{profile?.username || '-'}</strong>
                   </div>
-                </IonCardContent>
-              </IonCard>
-
-              <IonCard className="soft-card form-card profile-card">
-                <IonCardContent>
-                  <div className="profile-card__header">
-                    <IonIcon icon={lockClosedOutline} />
-                    <div>
-                      <strong>Cambiar contraseña</strong>
-                      <p>Ingresá tu contraseña actual y elegí una nueva.</p>
-                    </div>
+                  <div>
+                    <span>Nombre completo</span>
+                    <strong>{profile?.fullName || '-'}</strong>
                   </div>
+                  <div>
+                    <span>Email</span>
+                    <strong>{profile?.email || '-'}</strong>
+                  </div>
+                </div>
+              </section>
 
-                  <form className="profile-form" onSubmit={handleChangePassword}>
-                    <IonItem className="field-card">
-                      <IonLabel position="stacked">Contraseña actual</IonLabel>
-                      <IonIcon icon={lockClosedOutline} slot="start" />
-                      <IonInput
-                        type="password"
-                        value={currentPassword}
-                        onIonInput={(e) => setCurrentPassword(e.detail.value || '')}
-                        placeholder="Contraseña actual"
-                      />
-                    </IonItem>
+              <section className="soft-card form-card profile-card">
+                <div className="profile-card__header">
+                  <IonIcon icon={lockClosedOutline} />
+                  <div>
+                    <strong>Cambiar contraseña</strong>
+                    <p>Ingresá tu contraseña actual y elegí una nueva.</p>
+                  </div>
+                </div>
 
-                    <IonItem className="field-card">
-                      <IonLabel position="stacked">Nueva contraseña</IonLabel>
-                      <IonIcon icon={lockClosedOutline} slot="start" />
-                      <IonInput
-                        type="password"
-                        value={newPassword}
-                        onIonInput={(e) => setNewPassword(e.detail.value || '')}
-                        placeholder="Nueva contraseña"
-                      />
-                    </IonItem>
+                <form className="profile-form" onSubmit={handleChangePassword}>
+                  {[
+                    ['current', 'Contraseña actual', currentPassword, setCurrentPassword, 'current-password'],
+                    ['new', 'Nueva contraseña', newPassword, setNewPassword, 'new-password'],
+                    ['confirm', 'Confirmar nueva contraseña', confirmPassword, setConfirmPassword, 'new-password'],
+                  ].map(([id, label, value, setValue, autoComplete]) => (
+                    <div className="field" key={id}>
+                      <label className="field__label" htmlFor={`pwd-${id}`}>{label}</label>
+                      <div className="field__wrap">
+                        <IonIcon icon={lockClosedOutline} className="field__icon" />
+                        <input
+                          id={`pwd-${id}`}
+                          type="password"
+                          className="field__input"
+                          value={value}
+                          autoComplete={autoComplete}
+                          onChange={(e) => setValue(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <p className="field__hint">Mínimo 8 caracteres.</p>
 
-                    <IonItem className="field-card">
-                      <IonLabel position="stacked">Confirmar nueva contraseña</IonLabel>
-                      <IonIcon icon={lockClosedOutline} slot="start" />
-                      <IonInput
-                        type="password"
-                        value={confirmPassword}
-                        onIonInput={(e) => setConfirmPassword(e.detail.value || '')}
-                        placeholder="Repetí la contraseña"
-                      />
-                    </IonItem>
+                  {error ? <div className="error-banner" role="alert">{error}</div> : null}
+                  {success ? <div className="success-banner" role="status">{success}</div> : null}
 
-                    {error ? <IonText color="danger"><p>{error}</p></IonText> : null}
-                    {success ? <IonText color="success"><p>{success}</p></IonText> : null}
-
-                    <IonButton expand="block" type="submit" disabled={saving} className="hero-cta">
-                      {saving ? 'Actualizando...' : 'Actualizar contraseña'}
-                    </IonButton>
-                  </form>
-                </IonCardContent>
-              </IonCard>
+                  <button type="submit" className="login-btn" disabled={saving}>
+                    {saving ? <IonSpinner name="crescent" /> : 'Actualizar contraseña'}
+                  </button>
+                </form>
+              </section>
             </div>
 
             <div className="profile-actions">
-              <IonButton expand="block" fill="outline" color="medium" onClick={() => { logout(); navigate('/login', { replace: true }) }}>
-                Cerrar sesión
-              </IonButton>
+              <button type="button" className="login-btn login-btn--secondary login-btn--block" onClick={() => { logout(); navigate('/login', { replace: true }) }}>
+                <span className="btn-with-icon"><IonIcon icon={logOutOutline} />Cerrar sesión</span>
+              </button>
             </div>
 
             <BottomNav active="Perfil" onNavigate={navigate} />

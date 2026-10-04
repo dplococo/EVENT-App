@@ -100,10 +100,10 @@ export default function ReservationPage() {
         </IonToolbar>
       </IonHeader>
       <IonContent className="app-shell app-shell--detail">
-        <div className="detail-page" style={{ padding: '0 16px' }}>
+        <div className="detail-page events-page--padded">
           <div className="detail-page__body detail-page__body--centered">
             {loading ? (
-              <div style={{ display: 'grid', placeItems: 'center', minHeight: 240 }}><IonSpinner /></div>
+              <div className="center-fill"><IonSpinner name="crescent" /></div>
             ) : (
               <>
                 <div className="event-hero event-hero--compact">

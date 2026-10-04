@@ -14,21 +14,34 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// El login usa el 401 para "contraseña incorrecta": no debe expulsar.
+const NO_REDIRECT_401 = ["/auth/login", "/auth/forgot-password", "/auth/reset-password"];
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const url = error.config?.url || "";
+    if (status === 401 && !NO_REDIRECT_401.some((path) => url.startsWith(path))) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
+    }
+    // Licencia de la empresa bloqueada: la app muestra el aviso en cualquier pantalla.
+    if (status === 402) {
+      window.dispatchEvent(new CustomEvent("license:blocked", { detail: error.response.data?.license }));
     }
     return Promise.reject(error);
   },
 );
 
+export const apiError = (error, fallback = "Ocurrió un error inesperado") =>
+  error?.response?.data?.error ||
+  (error?.code === "ECONNABORTED" ? "El servidor tardó demasiado en responder" : fallback);
+
 export const authService = {
-  login: (username, password) =>
-    api.post("/auth/login", { username, password }),
+  login: (username, password, tenantEmail) =>
+    api.post("/auth/login", { username, password, tenantEmail: tenantEmail || undefined }),
   getProfile: () => api.get("/auth/profile"),
   changePassword: (currentPassword, newPassword) =>
     api.post("/auth/change-password", { currentPassword, newPassword }),
@@ -65,6 +78,10 @@ export const reservationService = {
 
 export const categoryService = {
   getAll: () => api.get("/categories"),
+};
+
+export const licenseService = {
+  getState: () => api.get("/license/state"),
 };
 
 export default api;

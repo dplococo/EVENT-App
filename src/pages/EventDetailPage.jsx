@@ -84,7 +84,7 @@ export default function EventDetailPage() {
 
           <div className="detail-page__body">
             {loading ? (
-              <div style={{ display: 'grid', placeItems: 'center', minHeight: 240 }}><IonSpinner /></div>
+              <div className="center-fill"><IonSpinner name="crescent" /></div>
             ) : (
               <>
                 <div className="event-hero event-hero--compact">
