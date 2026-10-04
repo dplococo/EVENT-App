@@ -5,6 +5,7 @@ import { arrowBackOutline, businessOutline, logOutOutline, mailOutline, lockClos
 import { authService } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import BottomNav from '../components/BottomNav'
+import UserAvatar from '../components/UserAvatar'
 
 const ROLE_LABELS = { Admin: 'Administrador', Operator: 'Operador', EventStaff: 'Staff de evento' }
 
@@ -90,7 +91,7 @@ export default function ProfilePage() {
             <div className="event-hero event-hero--compact">
               <div className="event-hero__content">
                 <p className="eyebrow">Perfil</p>
-                <h1>{profile?.fullName || profile?.username || 'Usuario'}</h1>
+                <h1 className="user-name-row"><UserAvatar imageUrl={profile?.imageUrl || user?.imageUrl} size={44} />{profile?.fullName || profile?.username || 'Usuario'}</h1>
                 <div className="event-meta">
                   <span><IonIcon icon={personCircleOutline} /> {ROLE_LABELS[profile?.role] || profile?.role || 'Sin rol'}</span>
                   {profile?.email ? <span><IonIcon icon={mailOutline} /> {profile.email}</span> : null}

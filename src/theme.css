@@ -423,6 +423,21 @@ button:active:not(:disabled),
   text-overflow: ellipsis;
 }
 
+.user-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.user-avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--app-border-solid);
+  background: var(--app-bg-soft);
+}
+
 .quick-panel {
   background: var(--app-surface);
   color: var(--app-text-main);

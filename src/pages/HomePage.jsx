@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { eventService } from '../services/api'
 import BottomNav from '../components/BottomNav'
 import LicenseNotice from '../components/LicenseNotice'
+import UserAvatar from '../components/UserAvatar'
 
 const greeting = () => {
   const h = new Date().getHours()
@@ -65,7 +66,7 @@ export default function HomePage() {
       <IonContent className="ion-padding app-shell">
         <header className="home-greeting">
           <p className="eyebrow">{greeting()}</p>
-          <h1>Hola, {firstName}</h1>
+          <h1 className="user-name-row"><UserAvatar imageUrl={user?.imageUrl} />Hola, {firstName}</h1>
         </header>
 
         <LicenseNotice />
