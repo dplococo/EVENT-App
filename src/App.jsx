@@ -9,6 +9,8 @@ import EventDetailPage from './pages/EventDetailPage'
 import ReservationPage from './pages/ReservationPage'
 import ProfilePage from './pages/ProfilePage'
 import BlockedPage from './pages/BlockedPage'
+import TableTabsPage from './pages/TableTabsPage'
+import TabPage from './pages/TabPage'
 
 const ProtectedRoute = ({ children }) => {
   const { user, license, loading } = useAuth()
@@ -38,6 +40,8 @@ const AppRoutes = () => {
       <Route path="/events" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
       <Route path="/events/:id" element={<ProtectedRoute><EventDetailPage /></ProtectedRoute>} />
       <Route path="/events/:id/reserve/:tableId" element={<ProtectedRoute><ReservationPage /></ProtectedRoute>} />
+      <Route path="/events/:id/tables/:tableId/consumos" element={<ProtectedRoute><TableTabsPage /></ProtectedRoute>} />
+      <Route path="/events/:id/tabs/:tabId" element={<ProtectedRoute><TabPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="*" element={<Navigate to="/home" replace />} />

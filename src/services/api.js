@@ -80,6 +80,25 @@ export const categoryService = {
   getAll: () => api.get("/categories"),
 };
 
+export const productService = {
+  getActive: () => api.get("/products", { params: { active: 1 } }),
+};
+
+// Cuentas de consumo de un evento (por mesa o por reserva)
+export const tabService = {
+  getByEvent: (eventId, status) => api.get(`/events/${eventId}/tabs`, { params: { status } }),
+  getById: (eventId, tabId) => api.get(`/events/${eventId}/tabs/${tabId}`),
+  // Si ahora se pueden cargar consumos (evento activo, hoy, entre inicio y fin)
+  getLive: (eventId) => api.get(`/events/${eventId}/tabs/live`),
+  open: (eventId, tableId, reservationId = null) =>
+    api.post(`/events/${eventId}/tabs`, { tableId, reservationId }),
+  addItem: (eventId, tabId, productId, quantity, notes) =>
+    api.post(`/events/${eventId}/tabs/${tabId}/items`, { productId, quantity, notes }),
+  voidItem: (eventId, tabId, itemId, reason) =>
+    api.post(`/events/${eventId}/tabs/${tabId}/items/${itemId}/void`, { reason }),
+  close: (eventId, tabId, data) => api.post(`/events/${eventId}/tabs/${tabId}/close`, data),
+};
+
 export const licenseService = {
   getState: () => api.get("/license/state"),
 };

@@ -1781,3 +1781,301 @@ button.login-forgot {
 .profile-card {
   padding: 18px;
 }
+
+/* ============================================================
+ * Consumos: modo del detalle, cuentas por mesa/reserva y carga
+ * ============================================================ */
+.mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--app-bg-soft);
+  border: 1px solid var(--app-border-solid);
+}
+
+.mode-switch button {
+  height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--app-text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.mode-switch button.is-active {
+  background: var(--app-surface);
+  color: var(--app-primary);
+  box-shadow: var(--app-shadow-float);
+}
+
+.map-dot.state-tab { color: var(--app-primary); }
+.map-dot.state-idle { color: var(--app-text-subtle); }
+.legend-dot.tab { background: var(--app-primary); }
+.legend-dot.idle { background: var(--app-text-subtle); }
+
+.tab-table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+}
+
+.tab-table {
+  min-height: 64px;
+  border-radius: 12px;
+  border: 1px solid var(--app-border-solid);
+  background: var(--app-surface);
+  color: var(--app-text-main);
+  display: grid;
+  place-content: center;
+  gap: 2px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.tab-table strong { font-size: 15px; }
+.tab-table span { font-size: 11px; color: var(--app-text-muted); }
+
+.tab-table--open {
+  border-color: var(--app-primary);
+  background: var(--app-primary-soft);
+}
+
+.tab-table--open span { color: var(--app-primary); font-weight: 700; }
+
+.tab-list,
+.tab-items {
+  display: grid;
+  gap: 8px;
+}
+
+.tab-row,
+.tab-item,
+.product-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--app-border-solid);
+  background: var(--app-surface);
+  color: var(--app-text-main);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tab-row:disabled,
+.tab-item:disabled { cursor: default; opacity: 1; }
+.product-row:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.tab-row__body,
+.tab-item__body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.tab-row__body strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+}
+
+.tab-row__body span,
+.tab-item__body span,
+.tab-row__amount span {
+  font-size: 12px;
+  color: var(--app-text-muted);
+}
+
+.tab-row__amount {
+  display: grid;
+  text-align: right;
+}
+
+.tab-row__amount strong { color: var(--app-primary); }
+
+.tab-row__cta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--app-primary);
+}
+
+.tab-row__chevron {
+  color: var(--app-text-subtle);
+  font-size: 18px;
+}
+
+.tab-item__qty {
+  min-width: 34px;
+  font-weight: 800;
+  color: var(--app-primary);
+}
+
+.tab-item__body strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-items--voided .tab-item {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.tab-items--voided .tab-item strong { text-decoration: line-through; }
+
+.tab-totals {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--app-bg-soft);
+  font-size: 14px;
+}
+
+.tab-totals div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--app-text-muted);
+}
+
+.tab-totals__grand {
+  padding-top: 8px;
+  border-top: 1px solid var(--app-border-solid);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.tab-totals .tab-totals__grand { color: var(--app-text-main); }
+
+.tab-actions {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 30;
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 10px;
+}
+
+.tab-actions .login-btn {
+  margin: 0;
+  max-width: none;
+  box-shadow: var(--app-shadow-float);
+}
+
+/* Hoja inferior (agregar consumo / cobrar) */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px 18px 0 0;
+  background: var(--app-surface);
+  color: var(--app-text-main);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow: var(--app-shadow-float);
+}
+
+.sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 8px;
+}
+
+.sheet__header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.sheet__body {
+  display: grid;
+  gap: 12px;
+  padding: 4px 16px 20px;
+  overflow-y: auto;
+}
+
+.sheet__hint {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 14px;
+}
+
+.sheet__loading {
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+.product-list {
+  display: grid;
+  gap: 6px;
+}
+
+.product-row > div {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.product-row span {
+  font-size: 12px;
+  color: var(--app-text-muted);
+}
+
+.product-row span.is-low { color: var(--app-warning); font-weight: 700; }
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 0;
+}
+
+.stepper button {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 1px solid var(--app-border-solid);
+  background: var(--app-bg-soft);
+  color: var(--app-text-main);
+  font-size: 22px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.stepper strong {
+  min-width: 48px;
+  text-align: center;
+  font-size: 28px;
+}
+
+.tab-row__cta--off { color: var(--app-text-subtle); }
+.tab-actions--single { grid-template-columns: 1fr; }
