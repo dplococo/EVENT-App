@@ -99,6 +99,13 @@ export const tabService = {
   close: (eventId, tabId, data) => api.post(`/events/${eventId}/tabs/${tabId}/close`, data),
 };
 
+// Entradas generales: control de acceso en la puerta
+export const ticketService = {
+  getSummary: (eventId) => api.get(`/events/${eventId}/tickets/summary`),
+  getOrders: (eventId, search) => api.get(`/events/${eventId}/tickets/orders`, { params: { search } }),
+  checkIn: (eventId, code) => api.post(`/events/${eventId}/tickets/check-in`, { code }),
+};
+
 export const licenseService = {
   getState: () => api.get("/license/state"),
 };

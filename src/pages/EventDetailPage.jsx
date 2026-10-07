@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { IonCard, IonCardContent, IonContent, IonHeader, IonIcon, IonPage, IonSpinner, IonToolbar } from '@ionic/react'
-import { arrowBackOutline, calendarOutline, locationOutline } from 'ionicons/icons'
-import { eventService, tableService, tabService } from '../services/api'
+import { arrowBackOutline, calendarOutline, chevronForwardOutline, locationOutline, qrCodeOutline } from 'ionicons/icons'
+import { eventService, tableService, tabService, ticketService } from '../services/api'
 import SectionHeader from '../components/SectionHeader'
 import BottomNav from '../components/BottomNav'
 import { resolveAssetUrl } from '../utils/assetUrl'
@@ -19,6 +19,7 @@ export default function EventDetailPage() {
   const [mapAspectRatio, setMapAspectRatio] = useState(null)
   const [openTabs, setOpenTabs] = useState([])
   const [live, setLive] = useState(null)
+  const [tickets, setTickets] = useState(null)
   // El modo va en la URL para que al volver de una cuenta siga en Consumos.
   const [searchParams, setSearchParams] = useSearchParams()
   const mode = searchParams.get('modo') === 'consumos' ? 'consumos' : 'reservas'
@@ -34,6 +35,10 @@ export default function EventDetailPage() {
         setTables(tablesRes.data || [])
       })
       .finally(() => setLoading(false))
+    // Si el evento vende entradas generales, se ofrece el control de acceso.
+    ticketService.getSummary(id)
+      .then((res) => setTickets(res.data.sectors.length > 0 ? res.data.totals : null))
+      .catch(() => setTickets(null))
   }, [id])
 
   // Refresca la disponibilidad de mesas mientras el usuario navega el mapa,
@@ -132,6 +137,17 @@ export default function EventDetailPage() {
                     </div>
                   </div>
                 </div>
+
+                {tickets && (
+                  <button type="button" className="tab-row scan-entry" onClick={() => navigate(`/events/${id}/puerta`)}>
+                    <IonIcon icon={qrCodeOutline} className="scan-entry__icon" />
+                    <div className="tab-row__body">
+                      <strong>Control de acceso</strong>
+                      <span>Escanear entradas · {tickets.used} de {tickets.sold} ingresaron</span>
+                    </div>
+                    <IonIcon icon={chevronForwardOutline} className="tab-row__chevron" />
+                  </button>
+                )}
 
                 <div className="mode-switch" role="tablist" aria-label="Modo">
                   <button type="button" role="tab" aria-selected={mode === 'reservas'} className={mode === 'reservas' ? 'is-active' : ''} onClick={() => setMode('reservas')}>Reservas</button>
