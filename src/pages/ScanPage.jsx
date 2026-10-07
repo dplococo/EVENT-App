@@ -15,6 +15,7 @@ const RESULTS = {
   used: { tone: 'warn', icon: timeOutline, title: 'Ya ingresó' },
   cancelled: { tone: 'bad', icon: closeCircleOutline, title: 'Entrada anulada' },
   wrong_event: { tone: 'bad', icon: alertCircleOutline, title: 'Es de otro evento' },
+  unpaid: { tone: 'warn', icon: alertCircleOutline, title: 'Pago pendiente' },
   not_found: { tone: 'bad', icon: closeCircleOutline, title: 'Entrada no válida' },
 }
 
@@ -108,7 +109,7 @@ export default function ScanPage() {
   const [checking, setChecking] = useState(false)
   const [tab, setTab] = useState('scan')
   const [search, setSearch] = useState('')
-  const [orders, setOrders] = useState(null)
+  const [found, setFound] = useState(null)
   const [searchError, setSearchError] = useState('')
   const [busyCode, setBusyCode] = useState('')
 
@@ -116,7 +117,11 @@ export default function ScanPage() {
     eventService.getById(id).then((res) => setEvent(res.data)).catch(() => {})
   }, [id])
 
-  const loadSummary = () => ticketService.getSummary(id).then((res) => setSummary(res.data.totals)).catch(() => {})
+  // Personas: entradas generales más los lugares de las reservas de mesa.
+  const loadSummary = () => ticketService.getSummary(id).then((res) => {
+    const { totals, reservations } = res.data
+    setSummary({ used: totals.used + reservations.checkedInSeats, sold: totals.sold + reservations.seats })
+  }).catch(() => {})
   usePolling(loadSummary, 10000, [id])
 
   const checkIn = useCallback(async (code) => {
@@ -156,10 +161,10 @@ export default function ScanPage() {
   useEffect(() => {
     if (tab !== 'search') return
     const q = search.trim()
-    if (q.length < 2) { setOrders(null); return }
+    if (q.length < 2) { setFound(null); return }
     const t = setTimeout(() => {
-      ticketService.getOrders(id, q)
-        .then((res) => { setOrders(res.data); setSearchError('') })
+      ticketService.doorSearch(id, q)
+        .then((res) => { setFound(res.data); setSearchError('') })
         .catch((err) => setSearchError(apiError(err, 'No se pudo buscar')))
     }, 300)
     return () => clearTimeout(t)
@@ -169,14 +174,32 @@ export default function ScanPage() {
     setBusyCode(ticket.code)
     const data = await checkIn(ticket.code)
     setBusyCode('')
-    if (data) {
-      setOrders((list) => list?.map((o) => o.id !== order.id ? o : {
-        ...o,
-        usedCount: o.usedCount + (data.result === 'ok' ? 1 : 0),
-        tickets: o.tickets.map((t) => t.code === ticket.code && data.result === 'ok' ? { ...t, status: 'Used', checkedInAt: new Date().toISOString() } : t),
-      }))
+    if (data?.result === 'ok') {
+      setFound((f) => f && {
+        ...f,
+        orders: f.orders.map((o) => o.id !== order.id ? o : {
+          ...o,
+          usedCount: o.usedCount + 1,
+          tickets: o.tickets.map((t) => t.code === ticket.code ? { ...t, status: 'Used', checkedInAt: new Date().toISOString() } : t),
+        }),
+      })
     }
   }
+
+  const admitReservation = async (reservation) => {
+    setBusyCode(reservation.code)
+    const data = await checkIn(reservation.code)
+    setBusyCode('')
+    if (data?.result === 'ok') {
+      setFound((f) => f && {
+        ...f,
+        reservations: f.reservations.map((r) => r.id === reservation.id ? { ...r, checkedInAt: new Date().toISOString() } : r),
+      })
+    }
+  }
+
+  const orders = found?.orders
+  const reservations = found?.reservations || []
 
   const meta = result && (RESULTS[result.result] || { tone: 'bad', icon: alertCircleOutline, title: 'Error' })
   const info = result?.ticket
@@ -221,12 +244,38 @@ export default function ScanPage() {
             <div className="scan-search">
               <div className="search-bar__field">
                 <IonIcon icon={searchOutline} />
-                <input className="search-bar__input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nombre, CI, teléfono o código" autoFocus />
+                <input className="search-bar__input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nombre, CI, teléfono, mesa o código" autoFocus />
               </div>
               {searchError && <div className="error-banner">{searchError}</div>}
-              {orders && orders.length === 0 && (
+              {found && orders.length === 0 && reservations.length === 0 && (
                 <div className="empty-state"><strong>Sin resultados</strong><p>Probá con otro dato del comprador.</p></div>
               )}
+              {reservations.map((r) => {
+                const confirmed = r.status === 'Confirmed' || r.status === 'Paid'
+                return (
+                  <div key={`r${r.id}`} className={`scan-order ${r.status === 'Cancelled' ? 'is-cancelled' : ''}`}>
+                    <div className="scan-order__head">
+                      <div>
+                        <strong>{r.customerName}</strong>
+                        <span>Mesa {r.tableLabel}{r.zoneName ? ` · ${r.zoneName}` : ''} · {r.seatCount} persona{r.seatCount === 1 ? '' : 's'}</span>
+                      </div>
+                      <span className="scan-order__count">{r.status === 'Cancelled' ? 'Cancelada' : r.checkedInAt ? 'Ingresó' : confirmed ? 'Mesa' : 'Sin pago'}</span>
+                    </div>
+                    {r.status !== 'Cancelled' && (
+                      <div className="scan-order__tickets">
+                        <button
+                          type="button"
+                          className={`scan-ticket ${r.checkedInAt ? 'is-used' : ''}`}
+                          disabled={!!r.checkedInAt || !confirmed || !!busyCode}
+                          onClick={() => admitReservation(r)}
+                        >
+                          {busyCode === r.code ? <IonSpinner name="crescent" /> : r.checkedInAt ? `✓ ${time(r.checkedInAt)}` : confirmed ? `Marcar ingreso (${r.seatCount})` : 'Pago pendiente'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
               {orders?.map((o) => (
                 <div key={o.id} className={`scan-order ${o.status === 'Cancelled' ? 'is-cancelled' : ''}`}>
                   <div className="scan-order__head">
@@ -265,9 +314,12 @@ export default function ScanPage() {
             {result.result === 'wrong_event' && <p>Esta entrada es para «{result.eventName}».</p>}
             {info && (
               <div className="scan-result__info">
-                <span className="scan-result__zone"><i style={{ backgroundColor: info.zoneColor }} />{info.zoneName}</span>
+                {info.zoneName && <span className="scan-result__zone"><i style={{ backgroundColor: info.zoneColor }} />{info.zoneName}</span>}
                 <p>{info.customerName}{info.customerDocument ? ` · CI ${info.customerDocument}` : ''}</p>
-                <p>Entrada {info.number} de {info.quantity}</p>
+                {result.result === 'unpaid' && <p>La reserva todavía no tiene el pago confirmado.</p>}
+                <p>{info.kind === 'reservation'
+                  ? `Mesa ${info.tableLabel} · ${info.seatCount} persona${info.seatCount === 1 ? '' : 's'}`
+                  : `Entrada ${info.number} de ${info.quantity}`}</p>
                 {result.result === 'used' && <p>Ingresó a las {time(info.checkedInAt)}{info.checkedInByName ? ` (${info.checkedInByName})` : ''}</p>}
               </div>
             )}

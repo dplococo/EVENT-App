@@ -99,11 +99,13 @@ export const tabService = {
   close: (eventId, tabId, data) => api.post(`/events/${eventId}/tabs/${tabId}/close`, data),
 };
 
-// Entradas generales: control de acceso en la puerta
+// Control de acceso en la puerta: entradas generales y QR de reservas de mesa
 export const ticketService = {
   getSummary: (eventId) => api.get(`/events/${eventId}/tickets/summary`),
   getOrders: (eventId, search) => api.get(`/events/${eventId}/tickets/orders`, { params: { search } }),
   checkIn: (eventId, code) => api.post(`/events/${eventId}/tickets/check-in`, { code }),
+  // Ventas de entradas y reservas de mesa que coinciden con el nombre, CI, teléfono o código
+  doorSearch: (eventId, search) => api.get(`/events/${eventId}/tickets/door-search`, { params: { search } }),
 };
 
 export const licenseService = {

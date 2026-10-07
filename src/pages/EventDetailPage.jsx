@@ -35,9 +35,14 @@ export default function EventDetailPage() {
         setTables(tablesRes.data || [])
       })
       .finally(() => setLoading(false))
-    // Si el evento vende entradas generales, se ofrece el control de acceso.
+    // Con entradas generales o reservas de mesa, se ofrece el control de acceso.
     ticketService.getSummary(id)
-      .then((res) => setTickets(res.data.sectors.length > 0 ? res.data.totals : null))
+      .then((res) => {
+        const { sectors, totals, reservations } = res.data
+        setTickets(sectors.length > 0 || reservations.count > 0
+          ? { used: totals.used + reservations.checkedInSeats, sold: totals.sold + reservations.seats }
+          : null)
+      })
       .catch(() => setTickets(null))
   }, [id])
 
@@ -143,7 +148,7 @@ export default function EventDetailPage() {
                     <IonIcon icon={qrCodeOutline} className="scan-entry__icon" />
                     <div className="tab-row__body">
                       <strong>Control de acceso</strong>
-                      <span>Escanear entradas · {tickets.used} de {tickets.sold} ingresaron</span>
+                      <span>Escanear QR · {tickets.used} de {tickets.sold} personas ingresaron</span>
                     </div>
                     <IonIcon icon={chevronForwardOutline} className="tab-row__chevron" />
                   </button>
