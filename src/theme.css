@@ -7,11 +7,11 @@
   --app-primary: #4f46e5;          /* indigo-600 */
   --app-primary-strong: #4338ca;   /* indigo-700 */
   --app-primary-soft: rgba(79, 70, 229, 0.1);
-  --app-bg: #f8fafc;               /* slate-50 */
+  --app-bg: #f4f5fc;               /* gris con tinte índigo */
   --app-surface: #ffffff;
   --app-surface-strong: #ffffff;
   --app-bg-soft: #f1f5f9;          /* slate-100 */
-  --app-border-solid: #e2e8f0;     /* slate-200 */
+  --app-border-solid: #e0e3f1;
   --app-border: rgba(15, 23, 42, 0.1);
   --app-text-main: #0f172a;        /* slate-900 */
   --app-text-muted: #64748b;       /* slate-500 */
@@ -24,7 +24,7 @@
   --app-danger-soft: rgba(244, 63, 94, 0.1);
   --app-info: #0369a1;
   --app-info-soft: rgba(14, 165, 233, 0.12);
-  --app-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --app-shadow: 0 1px 3px 0 rgba(30, 27, 75, 0.06), 0 6px 16px -6px rgba(30, 27, 75, 0.1);
   --app-shadow-float: 0 10px 30px -8px rgba(15, 23, 42, 0.18), 0 2px 6px -2px rgba(15, 23, 42, 0.08);
 
   /* Estados de mesa: los mismos que el diseñador de Desktop */
@@ -60,7 +60,7 @@
     --app-warning: #fbbf24;
     --app-danger: #fb7185;
     --app-info: #38bdf8;
-    --app-shadow: none;
+    --app-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 6px 16px -6px rgba(0, 0, 0, 0.4);
     --ion-color-primary: #6366f1;
     --ion-color-primary-rgb: 99, 102, 241;
     color-scheme: dark;
@@ -2079,3 +2079,278 @@ button.login-forgot {
 
 .tab-row__cta--off { color: var(--app-text-subtle); }
 .tab-actions--single { grid-template-columns: 1fr; }
+
+/* ============================================================
+ * Estilo enriquecido: gradientes, sombras y acentos de color
+ * (mismo lenguaje visual que EVENT-Desktop)
+ * ============================================================ */
+:root {
+  --app-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --app-gradient-hero: linear-gradient(135deg, #1e1b4b 0%, #3730a3 55%, #6d28d9 100%);
+  --app-glow: 0 8px 20px -6px rgba(79, 70, 229, 0.45);
+}
+
+/* Fondo con halos de color suaves */
+ion-content.app-shell,
+ion-content.login-wrapper {
+  --background:
+    radial-gradient(520px 320px at 100% -5%, rgba(139, 92, 246, 0.12), transparent 60%),
+    radial-gradient(420px 280px at 0% 0%, rgba(79, 70, 229, 0.10), transparent 60%),
+    var(--app-bg);
+}
+
+/* Superficies: más redondeo y profundidad */
+.soft-card,
+.quick-panel,
+.shortcut-card,
+.event-card,
+.event-hero,
+.metric-card,
+.stat-chip,
+.event-row,
+.login-card {
+  border-color: transparent;
+  box-shadow: var(--app-shadow);
+  border-radius: 18px;
+}
+
+/* Títulos con más peso */
+.home-greeting h1,
+.list-hero h1,
+.event-hero h1 {
+  font-weight: 800;
+}
+
+.section-header h2,
+.quick-panel__title {
+  font-weight: 700;
+}
+
+.eyebrow,
+.shortcut-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--app-primary-soft);
+  font-weight: 700;
+}
+
+/* Panel rápido: tarjeta de marca con gradiente */
+.quick-panel {
+  background: var(--app-gradient-hero);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-panel::after {
+  content: '';
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.quick-panel .quick-panel__title,
+.quick-panel .section-header h2 {
+  color: #fff;
+}
+
+.quick-panel .quick-panel__subtitle,
+.quick-panel .section-header p {
+  color: rgba(224, 231, 255, 0.8);
+}
+
+.quick-panel .eyebrow,
+.quick-panel .shortcut-kicker {
+  background: rgba(255, 255, 255, 0.14);
+  color: #e0e7ff;
+}
+
+.quick-action {
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* KPIs del inicio: franja de color superior y número destacado */
+.stat-chip {
+  position: relative;
+  overflow: hidden;
+  padding-top: 15px;
+}
+
+.stat-chip::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #94a3b8, #64748b);
+}
+
+.stat-chip--primary::before { background: var(--app-gradient); }
+.stat-chip--success::before { background: linear-gradient(90deg, #34d399, #0d9488); }
+
+.stat-chip__value {
+  font-weight: 800;
+}
+
+/* Métricas del detalle */
+.metric-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #94a3b8, #64748b);
+}
+
+.metric-card--primary::before { background: linear-gradient(180deg, #6366f1, #7c3aed); }
+.metric-card--success::before { background: linear-gradient(180deg, #34d399, #0d9488); }
+.metric-card--warning::before { background: linear-gradient(180deg, #fbbf24, #f97316); }
+
+.metric-value {
+  font-weight: 800;
+}
+
+/* Filas de evento: casilla de fecha con gradiente */
+.date-tile {
+  border: 0;
+  background: var(--app-gradient);
+  box-shadow: var(--app-glow);
+}
+
+.date-tile__month {
+  color: rgba(224, 231, 255, 0.9);
+}
+
+.date-tile__day {
+  color: #fff;
+  font-weight: 800;
+}
+
+.event-row--muted .date-tile {
+  background: linear-gradient(135deg, #94a3b8, #64748b);
+  box-shadow: none;
+}
+
+/* Tarjetas de evento */
+.event-card__accent {
+  width: 5px;
+}
+
+.event-card__cta {
+  color: var(--app-primary);
+}
+
+.event-badge {
+  font-weight: 800;
+}
+
+/* Cabecera del detalle de evento */
+.event-hero--title-only,
+.event-hero--compact {
+  background: var(--app-gradient-hero);
+  color: #fff;
+}
+
+.event-hero--title-only h1,
+.event-hero--compact h1 {
+  color: #fff;
+}
+
+.event-hero--title-only .event-meta,
+.event-hero--compact .event-meta {
+  color: rgba(224, 231, 255, 0.85);
+}
+
+/* Botones principales */
+.login-btn {
+  background: var(--app-gradient);
+  box-shadow: var(--app-glow);
+}
+
+.sticky-cta ion-button {
+  --background: var(--app-gradient);
+  --box-shadow: var(--app-glow);
+}
+
+.login-brand__icon {
+  background: var(--app-gradient);
+}
+
+/* Botones de icono y selector de modo */
+.icon-button {
+  border-color: transparent;
+  box-shadow: var(--app-shadow);
+}
+
+.mode-switch button.is-active {
+  background: var(--app-gradient);
+  color: #fff;
+  box-shadow: var(--app-glow);
+}
+
+.category-chip--active {
+  background: var(--app-gradient);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--app-glow);
+}
+
+/* Barra inferior: ítem activo en píldora con gradiente */
+.bottom-nav {
+  border-radius: 20px;
+  border-color: transparent;
+}
+
+.bottom-nav__item {
+  border-radius: 14px;
+  padding: 6px 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.bottom-nav__item.is-active {
+  background: var(--app-gradient);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: var(--app-glow);
+}
+
+.event-hero--compact .eyebrow {
+  background: rgba(255, 255, 255, 0.14);
+  color: #e0e7ff;
+}
+
+.event-hero--compact .user-avatar {
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.event-hero--compact .reservation-summary div,
+.event-hero--compact .reservation-summary__chip {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.event-hero--compact .reservation-summary p {
+  color: rgba(224, 231, 255, 0.8);
+}
+
+.event-hero--compact .reservation-summary strong {
+  color: #fff;
+}
