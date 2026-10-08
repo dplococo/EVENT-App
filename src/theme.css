@@ -1318,6 +1318,13 @@ button:active:not(:disabled),
   justify-items: center;
   max-width: 400px;
   width: 100%;
+  margin: 0 auto;
+}
+
+/* Cada bloque ocupa el ancho de la columna: un título largo no lo empuja afuera */
+.detail-page__body--centered > * {
+  width: 100%;
+  min-width: 0;
 }
 
 .mobile-sticky-header::after {

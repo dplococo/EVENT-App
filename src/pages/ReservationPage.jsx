@@ -11,6 +11,7 @@ import {
 import { arrowBackOutline, callOutline, mailOutline, personOutline, pricetagOutline } from 'ionicons/icons'
 import { eventService, reservationService, tableService } from '../services/api'
 import BottomNav from '../components/BottomNav'
+import { money } from '../utils/money'
 
 export default function ReservationPage() {
   const { id, tableId } = useParams()
@@ -123,7 +124,7 @@ export default function ReservationPage() {
                     </div>
                     <div>
                       <p>Total</p>
-                      <strong>${totalAmount || 0}</strong>
+                      <strong>{money(totalAmount)}</strong>
                     </div>
                   </div>
                 </div>
