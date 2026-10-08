@@ -50,7 +50,7 @@ export default function LoginPage() {
             <div className="login-brand__icon">
               <IonIcon icon={ticketOutline} />
             </div>
-            <h1 className="login-brand__name">EventManager</h1>
+            <h1 className="login-brand__name">EventApp</h1>
             <p className="login-brand__tagline">Gestioná eventos y reservas</p>
           </div>
 
